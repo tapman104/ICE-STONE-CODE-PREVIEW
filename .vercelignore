@@ -1,0 +1,11 @@
+# Ignore editor and tooling files when deploying
+.git
+.github
+.vscode
+node_modules
+*.log
+.env
+.DS_Store
+*.psd
+*.ai
+*.sketch

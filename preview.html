@@ -641,7 +641,7 @@
                         Rich UI/UX code editor with live preview
                     </div>
                     <div id="about-profile" style="display:flex;gap:10px;align-items:center;margin-top:8px;">
-                        <img id="gh-avatar" src="https://github.com/tapman104.png" alt="avatar" width="48" height="48" style="border-radius:8px;border:1px solid rgba(148,163,184,0.18);object-fit:cover;">
+                        <img id="gh-avatar" data-src="https://github.com/tapman104.png" alt="avatar" width="48" height="48" style="border-radius:8px;border:1px solid rgba(148,163,184,0.18);object-fit:cover;opacity:0.9;">
                         <div>
                             <div id="gh-name" style="font-weight:600;font-size:0.95rem;color:var(--text-color)">tapman104</div>
                             <div id="gh-bio" class="about-info" style="margin-top:6px;color:var(--text-color);opacity:0.85;font-size:0.82rem;">GitHub profile</div>
@@ -657,6 +657,11 @@
                         <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="margin-right:8px"><path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zM6.5 11.5v-7l6 3.5-6 3.5z"/></svg>
                         <span>ICE-STONE-CODE-PREVIEW</span>
                     </a>
+                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;font-size:0.85rem;color:var(--text-color);">
+                        <span style="opacity:0.9">⭐ <strong id="gh-stars">—</strong></span>
+                        <span style="opacity:0.9">🍴 <strong id="gh-forks">—</strong></span>
+                        <span style="opacity:0.9">🏷 <strong id="gh-release">—</strong></span>
+                    </div>
                     <div class="app-version">v1.0.0</div>
                 </div>
             </div>
@@ -837,14 +842,37 @@
         }
 
         // Settings modal functions
+        function trapFocus(modal){
+            const focusable = Array.from(modal.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => el.offsetParent !== null);
+            if(focusable.length === 0) return () => {};
+            let i = 0;
+            const keyHandler = (e) => {
+                if(e.key === 'Tab'){
+                    e.preventDefault();
+                    i = (i + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length;
+                    focusable[i].focus();
+                }
+                if(e.key === 'Escape') { closeSettings(); }
+            };
+            document.addEventListener('keydown', keyHandler);
+            // focus first
+            focusable[0].focus();
+            return () => document.removeEventListener('keydown', keyHandler);
+        }
+
+        let _releaseTrap = null;
         function openSettings() {
             settingsModal.classList.add('open');
             settingsModal.setAttribute('aria-hidden', 'false');
+            ensureGithubLoaded();
+            if(_releaseTrap) _releaseTrap();
+            _releaseTrap = trapFocus(settingsModal);
         }
 
         function closeSettings() {
             settingsModal.classList.remove('open');
             settingsModal.setAttribute('aria-hidden', 'true');
+            if(_releaseTrap) { _releaseTrap(); _releaseTrap = null; }
         }
 
         // Event Listeners
@@ -985,20 +1013,60 @@
             localStorage.setItem('savedCode', codeEditor.value);
         });
 
-        // Fetch and populate GitHub profile for tapman104
-        (function loadGithubProfile(){
-            fetch('https://api.github.com/users/tapman104').then(res => res.ok ? res.json() : null).then(data => {
-                if(!data) return;
-                const avatar = document.getElementById('gh-avatar');
-                const name = document.getElementById('gh-name');
-                const bio = document.getElementById('gh-bio');
-                const link = document.getElementById('gh-link');
-                if(avatar && data.avatar_url) avatar.src = data.avatar_url;
-                if(name && (data.name || data.login)) name.textContent = data.name || data.login;
-                if(bio) bio.textContent = data.bio || '';
-                if(link && data.html_url) link.href = data.html_url;
-            }).catch(()=>{});
-        })();
+        // GitHub data loader with 12h cache (lazy)
+        const GH_CACHE_KEY = 'gh_cache_v1';
+        const GH_USER = 'tapman104';
+        const GH_REPO = 'ICE-STONE-CODE-PREVIEW';
+
+        async function fetchGithubData() {
+            try {
+                const cached = JSON.parse(localStorage.getItem(GH_CACHE_KEY) || 'null');
+                const twelveHours = 12 * 60 * 60 * 1000;
+                if (cached && (Date.now() - cached.ts) < twelveHours) {
+                    return cached.data;
+                }
+
+                const [userRes, repoRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${GH_USER}`),
+                    fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}`)
+                ]);
+                if (!userRes.ok || !repoRes.ok) throw new Error('GitHub API error');
+                const user = await userRes.json();
+                const repo = await repoRes.json();
+                const data = { user, repo };
+                try { localStorage.setItem(GH_CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch (e) {}
+                return data;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function populateGithub(data){
+            if(!data) return;
+            const { user, repo } = data;
+            const avatar = document.getElementById('gh-avatar');
+            const name = document.getElementById('gh-name');
+            const bio = document.getElementById('gh-bio');
+            const link = document.getElementById('gh-link');
+            const stars = document.getElementById('gh-stars');
+            const forks = document.getElementById('gh-forks');
+            const release = document.getElementById('gh-release');
+
+            if(avatar && user.avatar_url){ avatar.src = user.avatar_url; avatar.style.opacity = '1'; }
+            if(name && (user.name || user.login)) name.textContent = user.name || user.login;
+            if(bio) bio.textContent = user.bio || '';
+            if(link && user.html_url) link.href = user.html_url;
+            if(stars) stars.textContent = repo.stargazers_count ?? '—';
+            if(forks) forks.textContent = repo.forks_count ?? '—';
+            if(release) release.textContent = (repo?.pushed_at) ? new Date(repo.pushed_at).toISOString().slice(0,10) : '—';
+        }
+
+        let _ghLoaded = false;
+        function ensureGithubLoaded(){
+            if(_ghLoaded) return;
+            _ghLoaded = true;
+            fetchGithubData().then(populateGithub).catch(()=>{});
+        }
     </script>
 </body>
 </html>

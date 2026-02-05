@@ -449,13 +449,14 @@
                 <div>
                     <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">About</div>
                     <div style="display:flex;gap:10px;align-items:center;">
-                        <img id="idx-gh-avatar" src="https://github.com/tapman104.png" alt="avatar" width="56" height="56" style="border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.06)">
+                        <img id="idx-gh-avatar" data-src="https://github.com/tapman104.png" alt="avatar" width="56" height="56" style="border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.06);opacity:0.95">
                         <div>
                             <div id="idx-gh-name" style="font-weight:600">tapman104</div>
                             <a id="idx-gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.88rem;display:inline-block;margin-bottom:6px;">View on GitHub</a>
                             <br>
                             <a id="idx-gh-repo" href="https://github.com/tapman104/ICE-STONE-CODE-PREVIEW" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.82rem;">ICE-STONE-CODE-PREVIEW</a>
                             <div id="idx-gh-bio" style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;max-width:200px;">GitHub profile</div>
+                            <div style="margin-top:8px;font-size:0.86rem;color:var(--text-muted)">⭐ <strong id="idx-gh-stars">—</strong> &nbsp; 🍴 <strong id="idx-gh-forks">—</strong> &nbsp; 🏷 <strong id="idx-gh-release">—</strong></div>
                         </div>
                     </div>
                 </div>
@@ -504,18 +505,58 @@
             applyTheme(saved);
             if(saved === 'dark') themeDark.checked = true; else themeLight.checked = true;
 
-            // fetch GitHub profile for tapman104
-            fetch('https://api.github.com/users/tapman104').then(r=>r.ok? r.json() : null).then(data=>{
+            // Lazy-load GitHub user + repo info with 12h cache
+            const IDX_GH_CACHE = 'idx_gh_cache_v1';
+            const IDX_USER = 'tapman104';
+            const IDX_REPO = 'ICE-STONE-CODE-PREVIEW';
+
+            async function fetchIdxGithub(){
+                try{
+                    const cached = JSON.parse(localStorage.getItem(IDX_GH_CACHE) || 'null');
+                    const twelveHours = 12 * 60 * 60 * 1000;
+                    if(cached && (Date.now() - cached.ts) < twelveHours) return cached.data;
+
+                    const [uRes, rRes] = await Promise.all([
+                        fetch(`https://api.github.com/users/${IDX_USER}`),
+                        fetch(`https://api.github.com/repos/${IDX_USER}/${IDX_REPO}`)
+                    ]);
+                    if(!uRes.ok || !rRes.ok) throw new Error('GitHub error');
+                    const user = await uRes.json();
+                    const repo = await rRes.json();
+                    const data = { user, repo };
+                    try{ localStorage.setItem(IDX_GH_CACHE, JSON.stringify({ ts: Date.now(), data })); }catch(e){}
+                    return data;
+                }catch(err){ return null; }
+            }
+
+            function populateIdxGithub(data){
                 if(!data) return;
+                const { user, repo } = data;
                 const avatar = document.getElementById('idx-gh-avatar');
                 const name = document.getElementById('idx-gh-name');
                 const bio = document.getElementById('idx-gh-bio');
                 const link = document.getElementById('idx-gh-link');
-                if(avatar && data.avatar_url) avatar.src = data.avatar_url;
-                if(name && (data.name || data.login)) name.textContent = data.name || data.login;
-                if(bio && data.bio) bio.textContent = data.bio;
-                if(link && data.html_url) link.href = data.html_url;
-            }).catch(()=>{});
+                const stars = document.getElementById('idx-gh-stars');
+                const forks = document.getElementById('idx-gh-forks');
+                const rel = document.getElementById('idx-gh-release');
+                if(avatar && user.avatar_url) avatar.src = user.avatar_url;
+                if(name && (user.name || user.login)) name.textContent = user.name || user.login;
+                if(bio) bio.textContent = user.bio || '';
+                if(link && user.html_url) link.href = user.html_url;
+                if(stars) stars.textContent = repo.stargazers_count ?? '—';
+                if(forks) forks.textContent = repo.forks_count ?? '—';
+                if(rel) rel.textContent = repo?.pushed_at ? new Date(repo.pushed_at).toISOString().slice(0,10) : '—';
+            }
+
+            let _idxLoaded = false;
+            function ensureIdxGithub(){
+                if(_idxLoaded) return; _idxLoaded = true;
+                fetchIdxGithub().then(populateIdxGithub).catch(()=>{});
+            }
+
+            // Ensure GitHub loads when opening modal
+            const origOpen = openSettings;
+            openSettings = function(){ origOpen(); ensureIdxGithub(); };
         })();
     </script>
 
