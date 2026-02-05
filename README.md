@@ -17,8 +17,8 @@ npm i -g vercel
 
 ```bash
 vercel login
-vercel --prod
-```
+vercel --prod   -
+
 
 Or connect the GitHub repo to Vercel through the Vercel dashboard and deploy the `main` (or default) branch.
 
@@ -33,12 +33,14 @@ Manual test checklist
 	- Settings gear opens the modal, and theme toggles persist across reloads.
 	- About section fetches GitHub profile and repo stats when the modal opens (may be cached up to 12 hours).
 	- Modal traps keyboard focus and closes on `Escape`.
-
+https://drive.google.com/file/d/1N0Y61LkdDgXz9rlE462oTRdNrkbiHm-R/view?usp=drivesdk
+```
 - Open `preview.html` and verify:
 	- Settings modal opens and displays user + repo data after opening.
 	- Theme switch updates `data-theme` attribute and persists to `localStorage`.
 	- Running code updates preview iframe and downloads function works.
-
+https://drive.google.com/file/d/1N0Y61LkdDgXz9rlE462oTRdNrkbiHm-R/view?usp=drivesdk
+```
 Vercel notes
 - After deploying, visit `/preview` to land on the preview page (rewrite added in `vercel.json`).
 
