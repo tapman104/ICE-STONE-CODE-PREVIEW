@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galaxy Code – Rich UI/UX Playground</title>
+    <style>
+        :root {
+            --bg: radial-gradient(circle at top, #1b263b 0%, #02010a 45%, #000000 100%);
+            --card-bg: rgba(10, 12, 24, 0.9);
+            --accent: #4cc9f0;
+            --accent-soft: rgba(76, 201, 240, 0.12);
+            --accent-strong: #ffbe0b;
+            --text-main: #f8f9ff;
+            --text-muted: #9094b7;
+            --border-soft: rgba(255, 255, 255, 0.08);
+            --radius-xl: 24px;
+            --radius-md: 999px;
+            --shadow-soft: 0 24px 60px rgba(0, 0, 0, 0.75);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+            overflow: hidden;
+        }
+
+        .shell {
+            position: relative;
+            width: min(1120px, 100%);
+            border-radius: var(--radius-xl);
+            background: radial-gradient(circle at top left, rgba(76, 201, 240, 0.15), transparent 55%),
+                        radial-gradient(circle at bottom right, rgba(255, 190, 11, 0.2), transparent 55%),
+                        var(--card-bg);
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-soft);
+            overflow: hidden;
+            padding: 28px 28px 24px;
+        }
+
+        .blur-orbit {
+            position: absolute;
+            inset: -40%;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(76, 201, 240, 0.22), transparent 55%),
+                radial-gradient(circle at 90% 100%, rgba(255, 190, 11, 0.16), transparent 50%);
+            opacity: 0.5;
+            filter: blur(32px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .frame {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+            gap: 28px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 20px 12px; }
+            .shell { padding: 22px 20px 18px; }
+            .frame {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 20px;
+            }
+        }
+
+        .badge-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px 4px 4px;
+            border-radius: 999px;
+            background: rgba(5, 9, 22, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 18px;
+        }
+
+        .badge-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 999px;
+            background:
+                conic-gradient(from 210deg, var(--accent) 0deg 160deg, var(--accent-strong) 160deg 320deg, var(--accent) 320deg 360deg);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 0 24px rgba(76, 201, 240, 0.5);
+        }
+
+        .badge-dot::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            background: #02051a;
+        }
+
+        .badge-text {
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .title {
+            font-size: clamp(2rem, 3vw + 1rem, 3rem);
+            line-height: 1.05;
+            margin-bottom: 14px;
+        }
+
+        .title span.highlight {
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-strong) 50%, #ff6f91 100%);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            max-width: 32rem;
+            font-size: 0.98rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 26px;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 26px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px dashed rgba(255, 255, 255, 0.18);
+            background: rgba(2, 5, 20, 0.9);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .pill-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.85);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            padding: 10px 24px;
+            font-size: 0.96rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(120deg, var(--accent) 0%, #7b5cff 50%, var(--accent-strong) 100%);
+            color: #050816;
+            box-shadow: 0 16px 40px rgba(11, 155, 255, 0.6);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary span.icon-orbit {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            border: 2px solid #050816;
+            display: grid;
+            place-items: center;
+            background: #ffffff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px) scale(1.01);
+            filter: brightness(1.02);
+            box-shadow: 0 22px 60px rgba(11, 155, 255, 0.8);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0) scale(0.99);
+            box-shadow: 0 12px 32px rgba(11, 155, 255, 0.65);
+        }
+
+        .btn-ghost {
+            border-radius: var(--radius-md);
+            padding: 10px 18px;
+            font-size: 0.92rem;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            background: rgba(2, 6, 23, 0.65);
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(15, 23, 42, 0.9);
+            color: #e5e7ff;
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-ghost-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            border: 2px solid rgba(148, 163, 184, 0.6);
+        }
+
+        .right-panel {
+            position: relative;
+        }
+
+        .preview-shell {
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.22), rgba(15, 23, 42, 1));
+            padding: 14px 14px 16px;
+            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.95);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .traffic {
+            display: inline-flex;
+            gap: 6px;
+        }
+
+        .traffic span {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+        }
+
+        .traffic span:nth-child(1) { background: #fb5f57; }
+        .traffic span:nth-child(2) { background: #fcbc2e; }
+        .traffic span:nth-child(3) { background: #28c840; }
+
+        .preview-body {
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 14px;
+            border: 1px solid rgba(15, 23, 42, 0.7);
+            font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.78rem;
+            color: #e5e7eb;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-line span.lno {
+            opacity: 0.28;
+            min-width: 18px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .code-line span.code {
+            white-space: pre;
+        }
+
+        .twinkle {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.8;
+            mix-blend-mode: screen;
+        }
+
+        .twinkle span {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 999px;
+            background: white;
+            opacity: 0.7;
+        }
+
+        .twinkle span:nth-child(1) { top: 18%; left: 14%; opacity: 0.45; }
+        .twinkle span:nth-child(2) { top: 6%; right: 12%; opacity: 0.8; }
+        .twinkle span:nth-child(3) { bottom: 12%; left: 18%; opacity: 0.7; }
+        .twinkle span:nth-child(4) { bottom: 4%; right: 18%; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <div class="blur-orbit"></div>
+
+        <div class="frame">
+            <section>
+                <div class="badge-row">
+                    <div class="badge-dot"></div>
+                    <span class="badge-text">Rich UI · Fluid UX · Live Code</span>
+                </div>
+
+                <h1 class="title">
+                    Welcome to <span class="highlight">Galaxy&nbsp;Code</span>
+                </h1>
+
+                <p class="subtitle">
+                    Design, tweak, and preview HTML experiences in a single, elegant canvas.
+                    Open the live playground to see your code come alive with instant preview.
+                </p>
+
+                <div class="pill-row">
+                    <div class="pill">
+                        <span class="pill-dot"></span>
+                        Auto-preview while you type
+                    </div>
+                    <div class="pill">
+                        <span class="pill-dot"></span>
+                        Light / dark theme aware
+                    </div>
+                    <div class="pill">
+                        <span class="pill-dot"></span>
+                        Download as <code>index.html</code>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <a href="preview.html" class="btn-primary">
+                        <span class="icon-orbit">▶</span>
+                        <span>Open Preview</span>
+                    </a>
+
+                    <div class="btn-ghost">
+                        <span class="btn-ghost-dot"></span>
+                        <span>Rich UI · Welcome to Galaxy Code</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="right-panel" aria-hidden="true">
+                <div class="preview-shell">
+                    <header class="preview-header">
+                        <div>
+                            <div class="traffic">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span style="margin-left:10px;">galaxy-code / preview.html</span>
+                        </div>
+                        <span>live preview</span>
+                    </header>
+
+                    <div class="preview-body">
+                        <div class="code-line">
+                            <span class="lno">01</span>
+                            <span class="code">&lt;!-- Galaxy Code Preview --&gt;</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="lno">02</span>
+                            <span class="code">&lt;button&gt;Open Playground&lt;/button&gt;</span>
+                        </div>
+                        <div class="code-line">
+                            <span class="lno">03</span>
+                            <span class="code">// auto-updates as you type ✨</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="twinkle">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- Settings launcher (top-right) -->
+    <div class="settings-launcher" style="position:fixed;top:18px;right:18px;z-index:1200;">
+        <button id="settings-btn" title="Settings" style="width:40px;height:40px;border-radius:999px;border:none;background:rgba(255,255,255,0.04);color:var(--text-main);cursor:pointer;">⚙</button>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .18s;z-index:1190;">
+        <div style="position:absolute;top:60px;right:18px;width:320px;border-radius:12px;padding:14px;background:rgba(2,6,23,0.96);border:1px solid rgba(255,255,255,0.06);color:var(--text-main);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong style="letter-spacing:0.06em;text-transform:uppercase;font-size:0.78rem;color:var(--text-muted);">Settings</strong>
+                <button id="settings-close" style="background:transparent;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;">✕</button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">Theme</div>
+                    <label style="display:flex;align-items:center;gap:8px"><input type="radio" name="site-theme" id="idx-theme-dark" value="dark" checked> Dark</label>
+                    <label style="display:flex;align-items:center;gap:8px"><input type="radio" name="site-theme" id="idx-theme-light" value="light"> Light</label>
+                </div>
+
+                <div style="height:1px;background:rgba(255,255,255,0.04)"></div>
+
+                <div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">About</div>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <img id="idx-gh-avatar" src="https://github.com/tapman104.png" alt="avatar" width="56" height="56" style="border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.06)">
+                        <div>
+                            <div id="idx-gh-name" style="font-weight:600">tapman104</div>
+                            <a id="idx-gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.88rem;">View on GitHub</a>
+                            <div id="idx-gh-bio" style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;max-width:200px;">GitHub profile</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const settingsClose = document.getElementById('settings-close');
+            const themeDark = document.getElementById('idx-theme-dark');
+            const themeLight = document.getElementById('idx-theme-light');
+
+            function openSettings(){
+                settingsModal.style.pointerEvents = 'auto';
+                settingsModal.style.opacity = '1';
+                settingsModal.setAttribute('aria-hidden','false');
+            }
+            function closeSettings(){
+                settingsModal.style.pointerEvents = 'none';
+                settingsModal.style.opacity = '0';
+                settingsModal.setAttribute('aria-hidden','true');
+            }
+
+            settingsBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openSettings(); });
+            settingsClose.addEventListener('click', closeSettings);
+            settingsModal.addEventListener('click', (e)=>{ if(e.target === settingsModal) closeSettings(); });
+            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeSettings(); });
+
+            // Theme handling
+            function applyTheme(t){
+                document.documentElement.setAttribute('data-theme', t);
+                try{ localStorage.setItem('theme', t); }catch(e){}
+            }
+
+            themeDark.addEventListener('change', ()=>{ if(themeDark.checked) applyTheme('dark'); });
+            themeLight.addEventListener('change', ()=>{ if(themeLight.checked) applyTheme('light'); });
+
+            // load saved theme
+            const saved = (localStorage.getItem && localStorage.getItem('theme')) || 'dark';
+            applyTheme(saved);
+            if(saved === 'dark') themeDark.checked = true; else themeLight.checked = true;
+
+            // fetch GitHub profile for tapman104
+            fetch('https://api.github.com/users/tapman104').then(r=>r.ok? r.json() : null).then(data=>{
+                if(!data) return;
+                const avatar = document.getElementById('idx-gh-avatar');
+                const name = document.getElementById('idx-gh-name');
+                const bio = document.getElementById('idx-gh-bio');
+                const link = document.getElementById('idx-gh-link');
+                if(avatar && data.avatar_url) avatar.src = data.avatar_url;
+                if(name && (data.name || data.login)) name.textContent = data.name || data.login;
+                if(bio && data.bio) bio.textContent = data.bio;
+                if(link && data.html_url) link.href = data.html_url;
+            }).catch(()=>{});
+        })();
+    </script>
+
+</body>
+</html>

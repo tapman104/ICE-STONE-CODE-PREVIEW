@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galaxy Code Preview</title>
+    <style>
+        :root {
+            --light-bg: #e9ecef;
+            --light-surface: #ffffff;
+            --light-text: #212529;
+            --light-border: #dee2e6;
+            --dark-bg: #050816;
+            --dark-surface: #0b1020;
+            --dark-text: #e0e4ff;
+            --dark-border: #313552;
+            --primary-color: #4cc9f0;
+            --border-radius: 14px;
+        }
+
+        [data-theme="light"] {
+            --bg-color: var(--light-bg);
+            --surface-color: var(--light-surface);
+            --text-color: var(--light-text);
+            --border-color: var(--light-border);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: var(--dark-bg);
+            --surface-color: var(--dark-surface);
+            --text-color: var(--dark-text);
+            --border-color: var(--dark-border);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, rgba(76,201,240,0.18), transparent 60%), var(--bg-color);
+            color: var(--text-color);
+            padding: 16px;
+            display: flex;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            gap: 14px;
+        }
+
+        @media (max-width: 991px) {
+            .container { flex-direction: column; }
+            .editor-section, .preview-section { min-height: 45vh; }
+            .resize-handle { display: none; }
+        }
+
+        .editor-section, .preview-section {
+            background-color: var(--surface-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+            border: 1px solid rgba(148,163,184,0.45);
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 16px;
+            font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 14px;
+            border: none;
+            resize: none;
+            background-color: rgba(2,6,23,0.92);
+            color: #e5e7eb;
+            line-height: 1.6;
+            transition: font-size 0.2s ease;
+        }
+
+        [data-theme="light"] textarea {
+            background-color: #ffffff;
+            color: #1e293b;
+        }
+
+        textarea:focus { outline: none; }
+
+        .controls {
+            padding: 8px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: radial-gradient(circle at top left, rgba(76,201,240,0.16), transparent 55%), var(--bg-color);
+        }
+
+        .controls button {
+            background-color: transparent;
+            border: none;
+            border-radius: 999px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+        }
+
+        .controls button:hover {
+            background-color: rgba(148, 163, 184, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .controls button.primary {
+            color: #050816;
+            background: linear-gradient(135deg, #4cc9f0, #7b5cff);
+            box-shadow: 0 12px 32px rgba(76,201,240,0.6);
+        }
+
+        .controls button.primary:hover {
+            filter: brightness(1.05);
+        }
+
+        .status-bar {
+            flex-grow: 1;
+            text-align: right;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            padding-right: 10px;
+        }
+
+        .preview-header {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: radial-gradient(circle at top left, rgba(76,201,240,0.12), transparent 55%), var(--bg-color);
+        }
+
+        .preview-header-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        #fullscreen-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 5px;
+            border-radius: 999px;
+        }
+
+        #fullscreen-btn:hover {
+            background-color: rgba(148, 163, 184, 0.22);
+        }
+
+        .preview-container { flex: 1; position: relative; overflow: auto; background: #0b1020; }
+        iframe { width: 100%; height: 100%; border: none; background: #ffffff; }
+
+        .preview-section.fullscreen {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            z-index: 1000;
+            border-radius: 16px;
+        }
+
+        .resize-handle {
+            flex: 0 0 10px;
+            cursor: col-resize;
+            background-color: transparent;
+            position: relative;
+            margin: 0 -4px;
+        }
+
+        .resize-handle::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 32px;
+            background-color: rgba(148, 163, 184, 0.7);
+            border-radius: 1px;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #4cc9f0, #7b5cff);
+            color: #050816;
+            border-radius: 999px;
+            box-shadow: 0 12px 32px rgba(15,23,42,0.9);
+            z-index: 1200;
+            transform: translateY(120%);
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            font-size: 0.82rem;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Settings launcher (top-right gear) */
+        .settings-launcher {
+            position: fixed;
+            top: 14px;
+            right: 16px;
+            z-index: 1100;
+        }
+
+        .settings-launcher button {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            background: radial-gradient(circle at top, rgba(148,163,184,0.25), rgba(15,23,42,0.98));
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(15,23,42,0.9);
+            transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+            font-size: 16px;
+        }
+
+        [data-theme="light"] .settings-launcher button {
+            background: radial-gradient(circle at top, rgba(148,163,184,0.15), rgba(255,255,255,0.98));
+            color: #1e293b;
+            border-color: rgba(148,163,184,0.4);
+        }
+
+        .settings-launcher button:hover {
+            transform: translateY(-1px) scale(1.02) rotate(15deg);
+            box-shadow: 0 18px 44px rgba(15,23,42,0.95);
+        }
+
+        /* Settings modal */
+        .settings-modal {
+            position: fixed;
+            inset: 0;
+            background: transparent;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1090;
+            transition: background 0.2s ease, opacity 0.2s ease;
+        }
+
+        .settings-modal.open {
+            background: rgba(15,23,42,0.75);
+            pointer-events: auto;
+            opacity: 1;
+        }
+
+        [data-theme="light"] .settings-modal.open {
+            background: rgba(0,0,0,0.4);
+        }
+
+        .settings-card {
+            position: absolute;
+            top: 58px;
+            right: 18px;
+            width: 320px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            background: rgba(15,23,42,0.98);
+            border: 1px solid rgba(148,163,184,0.55);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.85);
+            padding: 16px 16px 14px;
+            color: #e5e7eb;
+            font-size: 0.82rem;
+            transform: translateY(-10px);
+            transition: transform 0.2s ease;
+        }
+
+        .settings-card::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .settings-card::-webkit-scrollbar-track {
+            background: rgba(148,163,184,0.1);
+            border-radius: 3px;
+        }
+
+        .settings-card::-webkit-scrollbar-thumb {
+            background: rgba(148,163,184,0.4);
+            border-radius: 3px;
+        }
+
+        .settings-card::-webkit-scrollbar-thumb:hover {
+            background: rgba(148,163,184,0.6);
+        }
+
+        .settings-modal.open .settings-card {
+            transform: translateY(0);
+        }
+
+        [data-theme="light"] .settings-card {
+            background: rgba(255,255,255,0.98);
+            color: #1e293b;
+            border-color: rgba(148,163,184,0.3);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(148,163,184,0.2);
+        }
+
+        .settings-header span {
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-size: 0.74rem;
+            opacity: 0.85;
+        }
+
+        .settings-close {
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            cursor: pointer;
+            border-radius: 999px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+            font-size: 18px;
+        }
+
+        .settings-close:hover {
+            background: rgba(148,163,184,0.18);
+        }
+
+        .settings-body {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-row span {
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        [data-theme="light"] .settings-row span {
+            color: #64748b;
+        }
+
+        .settings-row select {
+            flex: 1;
+            max-width: 140px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148,163,184,0.4);
+            background: rgba(15,23,42,0.6);
+            color: #e5e7eb;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        [data-theme="light"] .settings-row select {
+            background: rgba(241,245,249,0.9);
+            color: #1e293b;
+            border-color: rgba(148,163,184,0.3);
+        }
+
+        .settings-row select:hover {
+            border-color: rgba(148,163,184,0.6);
+        }
+
+        .settings-row select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .settings-row input[type="range"] {
+            flex: 1;
+            max-width: 140px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(148,163,184,0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .settings-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(76,201,240,0.5);
+        }
+
+        .settings-row input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(76,201,240,0.5);
+        }
+
+        .settings-reset {
+            margin-top: 4px;
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            background: rgba(239,68,68,0.12);
+            color: #fecaca;
+            cursor: pointer;
+            align-self: flex-start;
+            transition: background 0.2s ease;
+        }
+
+        .settings-reset:hover {
+            background: rgba(239,68,68,0.3);
+        }
+
+        .settings-divider {
+            height: 1px;
+            background: rgba(148,163,184,0.2);
+            margin: 12px 0;
+        }
+
+        .settings-section-title {
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 10px;
+            margin-top: 4px;
+        }
+
+        [data-theme="light"] .settings-section-title {
+            color: #64748b;
+        }
+
+        .theme-manager {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(148,163,184,0.3);
+            background: rgba(15,23,42,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="light"] .theme-option {
+            background: rgba(241,245,249,0.6);
+        }
+
+        .theme-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(76,201,240,0.1);
+        }
+
+        .theme-option input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+        }
+
+        .theme-option label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--text-color);
+        }
+
+        .about-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .about-info {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        [data-theme="light"] .about-info {
+            color: #64748b;
+        }
+
+        .about-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .about-link:hover {
+            background: rgba(76,201,240,0.1);
+            border-color: rgba(76,201,240,0.3);
+            transform: translateX(2px);
+        }
+
+        .about-link svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .app-version {
+            font-size: 0.75rem;
+            color: #64748b;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 640px) {
+            .settings-card {
+                width: calc(100% - 32px);
+                right: 16px;
+                top: 58px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Settings gear in top-right corner -->
+    <div class="settings-launcher">
+        <button id="settings-btn" title="Settings">⚙</button>
+    </div>
+
+    <!-- Settings modal -->
+    <div id="settings-modal" class="settings-modal" aria-hidden="true">
+        <div class="settings-card">
+            <div class="settings-header">
+                <span>Settings</span>
+                <button id="settings-close" class="settings-close" aria-label="Close">✕</button>
+            </div>
+            <div class="settings-body">
+                <div class="theme-manager">
+                    <div class="settings-section-title">Theme Manager</div>
+                    <div class="theme-option">
+                        <input type="radio" id="theme-dark" name="theme" value="dark" checked>
+                        <label for="theme-dark">Dark Theme</label>
+                    </div>
+                    <div class="theme-option">
+                        <input type="radio" id="theme-light" name="theme" value="light">
+                        <label for="theme-light">Light Theme</label>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <label class="settings-row">
+                    <span>Editor font</span>
+                    <input id="settings-font" type="range" min="11" max="22" value="14">
+                </label>
+
+                <button id="settings-reset" class="settings-reset" type="button">
+                    Reset to defaults
+                </button>
+
+                <div class="settings-divider"></div>
+
+                <div class="about-section">
+                    <div class="settings-section-title">About</div>
+                    <div class="about-info">
+                        <strong>Galaxy Code Preview</strong><br>
+                        Rich UI/UX code editor with live preview
+                    </div>
+                    <div id="about-profile" style="display:flex;gap:10px;align-items:center;margin-top:8px;">
+                        <img id="gh-avatar" src="https://github.com/tapman104.png" alt="avatar" width="48" height="48" style="border-radius:8px;border:1px solid rgba(148,163,184,0.18);object-fit:cover;">
+                        <div>
+                            <div id="gh-name" style="font-weight:600;font-size:0.95rem;color:var(--text-color)">tapman104</div>
+                            <div id="gh-bio" class="about-info" style="margin-top:6px;color:var(--text-color);opacity:0.85;font-size:0.82rem;">GitHub profile</div>
+                        </div>
+                    </div>
+                    <a id="gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" class="about-link" style="margin-top:8px;display:inline-flex;align-items:center;">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>GitHub</span>
+                    </a>
+                    <div class="app-version">v1.0.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="editor-section">
+            <div class="editor-container">
+                <textarea id="code-editor" spellcheck="false"><!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Galaxy Code – Live Preview</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            display: grid;
+            place-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: radial-gradient(circle at top, #1e293b 0%, #020617 55%, #000 100%);
+            color: #e5e7eb;
+            text-align: center;
+        }
+        .card {
+            background: rgba(15,23,42,0.96);
+            padding: 2.4rem 3.2rem;
+            border-radius: 18px;
+            box-shadow: 0 22px 60px rgba(15,23,42,0.95);
+            border: 1px solid rgba(148,163,184,0.35);
+        }
+        .card h1 {
+            margin-bottom: .6rem;
+        }
+        .card p {
+            margin-bottom: 1.6rem;
+            color: #9ca3af;
+        }
+        button {
+            background: linear-gradient(135deg, #4cc9f0, #7b5cff);
+            color: #020617;
+            border: none;
+            padding: 10px 22px;
+            font-size: 1rem;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 14px 32px rgba(79, 209, 197, 0.55);
+        }
+        button:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 18px 44px rgba(79, 209, 197, 0.75);
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Galaxy Code Preview</h1>
+        <p>Start typing in the editor and watch this card update in real‑time.</p>
+        <button id="demo-btn">Click Me!</button>
+    </div>
+
+    <script>
+        const button = document.getElementById('demo-btn');
+        let count = 0;
+        button.addEventListener('click', () => {
+            count++;
+            button.textContent = `Clicked ${count} times!`;
+        });
+    <\/script>
+</body>
+</html></textarea>
+            </div>
+            <div class="controls">
+                <button id="run-btn" class="primary" title="Run Code (Ctrl+Enter)">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+                </button>
+                <button id="download-btn" title="Download as HTML">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                </button>
+                <button id="theme-toggle-btn" title="Toggle Dark Mode">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.021 3.278 7.277 7.318 7.277a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/></svg>
+                </button>
+                
+                <button id="clear-btn" title="Clear Editor">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                    </svg>
+                </button>
+
+                <div class="status-bar"><span id="status">Ready</span></div>
+            </div>
+        </div>
+        
+        <div class="resize-handle"></div> 
+        
+        <div class="preview-section">
+            <div class="preview-header">
+                <span class="preview-header-title">Galaxy Code – Live Preview</span>
+                
+                <button id="fullscreen-btn" title="Toggle Fullscreen">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
+                </button>
+            </div>
+            <div class="preview-container">
+                <iframe id="preview-frame" title="Code Preview"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        const $ = sel => document.querySelector(sel);
+
+        const codeEditor = $('#code-editor');
+        const previewFrame = $('#preview-frame');
+        const defaultCode = codeEditor.value;
+
+        // Settings elements
+        const settingsBtn = $('#settings-btn');
+        const settingsModal = $('#settings-modal');
+        const settingsClose = $('#settings-close');
+        const settingsThemeSelect = $('#settings-theme');
+        const settingsFont = $('#settings-font');
+        const settingsReset = $('#settings-reset');
+        const themeDark = $('#theme-dark');
+        const themeLight = $('#theme-light');
+
+        function runCode() {
+            const code = codeEditor.value;
+            previewFrame.srcdoc = code;
+            updateStatus('Preview updated');
+        }
+
+        function downloadFile() {
+            const content = codeEditor.value;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Downloaded index.html');
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            // Update radio buttons
+            if (newTheme === 'dark') {
+                themeDark.checked = true;
+            } else {
+                themeLight.checked = true;
+            }
+        }
+
+        function clearEditor() {
+            if (confirm('Clear the editor? This cannot be undone.')) {
+                codeEditor.value = '';
+                runCode();
+                updateStatus('Editor cleared');
+                showNotification('Editor cleared');
+            }
+        }
+        
+        const updateStatus = message => $('#status').textContent = message;
+        
+        function showNotification(message) {
+            const notification = $('#notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 2600);
+        }
+
+        // Settings modal functions
+        function openSettings() {
+            settingsModal.classList.add('open');
+            settingsModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.remove('open');
+            settingsModal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Event Listeners
+        $('#run-btn').addEventListener('click', runCode);
+        $('#download-btn').addEventListener('click', downloadFile);
+        $('#theme-toggle-btn').addEventListener('click', toggleTheme);
+        $('#clear-btn').addEventListener('click', clearEditor);
+        
+        $('#fullscreen-btn').addEventListener('click', () => {
+            $('.preview-section').classList.toggle('fullscreen');
+        });
+
+        // Settings modal listeners
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (settingsModal.classList.contains('open')) {
+                closeSettings();
+            } else {
+                openSettings();
+            }
+        });
+
+        settingsClose.addEventListener('click', closeSettings);
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                closeSettings();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSettings();
+            }
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+
+        // Theme radio button handlers
+        themeDark.addEventListener('change', () => {
+            if (themeDark.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        themeLight.addEventListener('change', () => {
+            if (themeLight.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        settingsFont.addEventListener('input', () => {
+            const size = settingsFont.value;
+            codeEditor.style.fontSize = size + 'px';
+            localStorage.setItem('editorFontSize', size);
+        });
+
+        settingsReset.addEventListener('click', () => {
+            const defaultTheme = 'dark';
+            const defaultFont = '14';
+
+            document.documentElement.setAttribute('data-theme', defaultTheme);
+            localStorage.setItem('theme', defaultTheme);
+            themeDark.checked = true;
+            themeLight.checked = false;
+
+            codeEditor.style.fontSize = defaultFont + 'px';
+            settingsFont.value = defaultFont;
+            localStorage.setItem('editorFontSize', defaultFont);
+            showNotification('Settings reset');
+        });
+
+        // Auto-run on input
+        let debounceTimer;
+        codeEditor.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            updateStatus('Typing...');
+            debounceTimer = setTimeout(runCode, 450);
+        });
+
+        // Resize functionality
+        let isResizing = false;
+        const resizeHandle = $('.resize-handle');
+        const editorSection = $('.editor-section');
+        const container = $('.container');
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            let newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+            if (newWidth < 15) newWidth = 15;
+            if (newWidth > 85) newWidth = 85;
+            
+            editorSection.style.flex = `0 0 ${newWidth}%`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            document.body.style.removeProperty('user-select');
+        });
+
+        // Initial Load
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            // Set radio buttons
+            if (savedTheme === 'dark') {
+                themeDark.checked = true;
+            } else {
+                themeLight.checked = true;
+            }
+
+            const savedFontSize = localStorage.getItem('editorFontSize') || '14';
+            codeEditor.style.fontSize = savedFontSize + 'px';
+            if (settingsFont) settingsFont.value = savedFontSize;
+            
+            codeEditor.value = localStorage.getItem('savedCode') || defaultCode;
+            runCode();
+            showNotification('Galaxy Code editor ready!');
+        });
+        
+        // Save code to localStorage before unload
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('savedCode', codeEditor.value);
+        });
+
+        // Fetch and populate GitHub profile for tapman104
+        (function loadGithubProfile(){
+            fetch('https://api.github.com/users/tapman104').then(res => res.ok ? res.json() : null).then(data => {
+                if(!data) return;
+                const avatar = document.getElementById('gh-avatar');
+                const name = document.getElementById('gh-name');
+                const bio = document.getElementById('gh-bio');
+                const link = document.getElementById('gh-link');
+                if(avatar && data.avatar_url) avatar.src = data.avatar_url;
+                if(name && (data.name || data.login)) name.textContent = data.name || data.login;
+                if(bio) bio.textContent = data.bio || '';
+                if(link && data.html_url) link.href = data.html_url;
+            }).catch(()=>{});
+        })();
+    </script>
+</body>
+</html>
