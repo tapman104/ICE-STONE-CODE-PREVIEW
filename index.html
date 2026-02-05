@@ -318,6 +318,28 @@
         .twinkle span:nth-child(2) { top: 6%; right: 12%; opacity: 0.8; }
         .twinkle span:nth-child(3) { bottom: 12%; left: 18%; opacity: 0.7; }
         .twinkle span:nth-child(4) { bottom: 4%; right: 18%; opacity: 0.5; }
+        /* Visual polish: modal, buttons, focus */
+        #settings-btn {
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            will-change: transform;
+        }
+
+        #settings-btn:hover { transform: translateY(-2px) rotate(10deg) scale(1.03); box-shadow: 0 12px 32px rgba(76,201,240,0.12); }
+        #settings-btn:focus { outline: none; }
+        #settings-btn:focus-visible { box-shadow: 0 0 0 3px rgba(76,201,240,0.12); border-radius:999px; }
+
+        #settings-modal { transition: background 220ms ease, opacity 220ms ease; }
+        #settings-modal > div { transform-origin: top right; transform: translateY(-8px) scale(.98); opacity: 0; transition: transform 220ms cubic-bezier(.2,.9,.3,1), opacity 220ms ease; }
+        #settings-modal.open { pointer-events: auto; opacity: 1; background: rgba(2,6,12,0.6); }
+        #settings-modal.open > div { transform: translateY(0) scale(1); opacity: 1; }
+
+        /* subtle card shadow and rounded look */
+        #settings-modal > div { box-shadow: 0 18px 60px rgba(2,6,23,0.9); border-radius: 14px; }
+
+        /* respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            #settings-btn, #settings-modal > div { transition: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -430,7 +452,9 @@
                         <img id="idx-gh-avatar" src="https://github.com/tapman104.png" alt="avatar" width="56" height="56" style="border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,0.06)">
                         <div>
                             <div id="idx-gh-name" style="font-weight:600">tapman104</div>
-                            <a id="idx-gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.88rem;">View on GitHub</a>
+                            <a id="idx-gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.88rem;display:inline-block;margin-bottom:6px;">View on GitHub</a>
+                            <br>
+                            <a id="idx-gh-repo" href="https://github.com/tapman104/ICE-STONE-CODE-PREVIEW" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.82rem;">ICE-STONE-CODE-PREVIEW</a>
                             <div id="idx-gh-bio" style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;max-width:200px;">GitHub profile</div>
                         </div>
                     </div>
@@ -448,17 +472,20 @@
             const themeLight = document.getElementById('idx-theme-light');
 
             function openSettings(){
+                settingsModal.classList.add('open');
                 settingsModal.style.pointerEvents = 'auto';
-                settingsModal.style.opacity = '1';
                 settingsModal.setAttribute('aria-hidden','false');
+                // focus first control inside modal
+                const first = settingsModal.querySelector('input, button, a');
+                if(first) first.focus();
             }
             function closeSettings(){
+                settingsModal.classList.remove('open');
                 settingsModal.style.pointerEvents = 'none';
-                settingsModal.style.opacity = '0';
                 settingsModal.setAttribute('aria-hidden','true');
             }
 
-            settingsBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openSettings(); });
+            settingsBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(settingsModal.classList.contains('open')) closeSettings(); else openSettings(); });
             settingsClose.addEventListener('click', closeSettings);
             settingsModal.addEventListener('click', (e)=>{ if(e.target === settingsModal) closeSettings(); });
             document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeSettings(); });
