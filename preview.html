@@ -861,19 +861,25 @@
         }
 
         let _releaseTrap = null;
-        function openSettings() {
-            settingsModal.classList.add('open');
-            settingsModal.setAttribute('aria-hidden', 'false');
-            ensureGithubLoaded();
-            if(_releaseTrap) _releaseTrap();
-            _releaseTrap = trapFocus(settingsModal);
+        function setSettingsState(isOpen) {
+            if (!settingsModal) return;
+            settingsModal.classList.toggle('open', isOpen);
+            settingsModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            // Force visibility/pointer-events in case CSS is overridden
+            settingsModal.style.pointerEvents = isOpen ? 'auto' : 'none';
+            settingsModal.style.opacity = isOpen ? '1' : '0';
+            if (isOpen) {
+                ensureGithubLoaded();
+                if (_releaseTrap) _releaseTrap();
+                _releaseTrap = trapFocus(settingsModal);
+            } else if (_releaseTrap) {
+                _releaseTrap();
+                _releaseTrap = null;
+            }
         }
 
-        function closeSettings() {
-            settingsModal.classList.remove('open');
-            settingsModal.setAttribute('aria-hidden', 'true');
-            if(_releaseTrap) { _releaseTrap(); _releaseTrap = null; }
-        }
+        function openSettings() { setSettingsState(true); }
+        function closeSettings() { setSettingsState(false); }
 
         // Event Listeners
         $('#run-btn').addEventListener('click', runCode);
