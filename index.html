@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Galaxy Code – Rich UI/UX Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: radial-gradient(circle at top, #1b263b 0%, #02010a 45%, #000000 100%);
@@ -23,7 +26,7 @@
 
         body {
             min-height: 100vh;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background: var(--bg);
             color: var(--text-main);
             display: flex;
@@ -104,7 +107,7 @@
             }
 
             .settings-card {
-                width: min(92vw, 360px);
+                width: min(88vw, 320px);
                 top: 58px;
                 right: 12px;
                 max-height: 82vh;
@@ -131,7 +134,7 @@
                 conic-gradient(from 210deg, var(--accent) 0deg 160deg, var(--accent-strong) 160deg 320deg, var(--accent) 320deg 360deg);
             display: grid;
             place-items: center;
-            box-shadow: 0 0 24px rgba(76, 201, 240, 0.5);
+            box-shadow: 0 0 12px rgba(76, 201, 240, 0.45);
         }
 
         .badge-dot::before {
@@ -144,7 +147,7 @@
 
         .badge-text {
             font-size: 0.78rem;
-            letter-spacing: 0.12em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--text-muted);
         }
@@ -153,6 +156,7 @@
             font-size: clamp(2rem, 3vw + 1rem, 3rem);
             line-height: 1.05;
             margin-bottom: 14px;
+            font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .title span.highlight {
@@ -167,6 +171,10 @@
             line-height: 1.6;
             color: var(--text-muted);
             margin-bottom: 26px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: linear-gradient(120deg, rgba(76, 201, 240, 0.12), rgba(255, 190, 11, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .pill-row {
@@ -208,7 +216,7 @@
             outline: none;
             cursor: pointer;
             border-radius: var(--radius-md);
-            padding: 10px 24px;
+            padding: 10px 22px;
             font-size: 0.96rem;
             font-weight: 600;
             letter-spacing: 0.03em;
@@ -233,6 +241,25 @@
             background: #ffffff;
         }
 
+        .btn-text {
+            display: inline-flex;
+            flex-direction: column;
+            line-height: 1.05;
+            gap: 2px;
+        }
+
+        .btn-title {
+            font-size: 0.92rem;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-sub {
+            font-size: 0.7rem;
+            text-transform: none;
+            letter-spacing: 0.02em;
+            opacity: 0.75;
+        }
+
         .btn-primary:hover {
             transform: translateY(-1px) scale(1.01);
             filter: brightness(1.02);
@@ -246,11 +273,11 @@
 
         .btn-ghost {
             border-radius: var(--radius-md);
-            padding: 10px 18px;
+            padding: 8px 16px;
             font-size: 0.92rem;
-            border: 1px solid rgba(255, 255, 255, 0.24);
-            background: rgba(2, 6, 23, 0.65);
-            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(2, 6, 23, 0.45);
+            color: rgba(144, 148, 183, 0.85);
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -259,7 +286,7 @@
         }
 
         .btn-ghost:hover {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.75);
             color: #e5e7ff;
             border-color: rgba(255, 255, 255, 0.6);
         }
@@ -269,6 +296,33 @@
             height: 10px;
             border-radius: 999px;
             border: 2px solid rgba(148, 163, 184, 0.6);
+        }
+
+        .feature-list {
+            margin-top: 18px;
+            display: grid;
+            gap: 8px;
+            font-size: 0.88rem;
+            color: rgba(200, 206, 235, 0.9);
+        }
+
+        .feature-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(2, 6, 23, 0.6);
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            width: fit-content;
+        }
+
+        .feature-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.8), rgba(255, 190, 11, 0.9));
+            box-shadow: 0 8px 18px rgba(76, 201, 240, 0.35);
         }
 
         .right-panel {
@@ -358,11 +412,51 @@
         #settings-btn {
             transition: transform 0.18s ease, box-shadow 0.18s ease;
             will-change: transform;
+            position: relative;
         }
 
         #settings-btn:hover { transform: translateY(-2px) rotate(10deg) scale(1.03); box-shadow: 0 12px 32px rgba(76,201,240,0.12); }
         #settings-btn:focus { outline: none; }
         #settings-btn:focus-visible { box-shadow: 0 0 0 3px rgba(76,201,240,0.12); border-radius:999px; }
+
+        #settings-btn[data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 0;
+            top: 50px;
+            background: rgba(2, 6, 23, 0.92);
+            color: var(--text-main);
+            font-size: 0.72rem;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            white-space: nowrap;
+        }
+
+        #settings-btn:hover::after,
+        #settings-btn:focus-visible::after {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #settings-btn.pulse::before {
+            content: "";
+            position: absolute;
+            inset: -6px;
+            border-radius: 999px;
+            border: 1px solid rgba(76, 201, 240, 0.5);
+            animation: pulse-ring 1.4s ease-out infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.85); opacity: 0.8; }
+            70% { transform: scale(1.15); opacity: 0; }
+            100% { transform: scale(1.15); opacity: 0; }
+        }
 
         #settings-modal { transition: background 220ms ease, opacity 220ms ease; pointer-events: none; opacity: 0; }
         #settings-modal > div { transform-origin: top right; transform: translateY(-8px) scale(.98); opacity: 0; transition: transform 220ms cubic-bezier(.2,.9,.3,1), opacity 220ms ease; }
@@ -378,7 +472,7 @@
             right: 18px;
             width: 320px;
             border-radius: 12px;
-            padding: 14px;
+            padding: 16px 16px 18px;
             background: rgba(2,6,23,0.96);
             border: 1px solid rgba(255,255,255,0.06);
             color: var(--text-main);
@@ -387,6 +481,51 @@
         /* respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
             #settings-btn, #settings-modal > div { transition: none !important; }
+            #settings-btn.pulse::before { animation: none !important; }
+        }
+
+        .mini-preview {
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(2, 6, 23, 0.7);
+            box-shadow: 0 18px 40px rgba(2, 6, 23, 0.7);
+            max-width: 360px;
+            animation: floaty 6s ease-in-out infinite;
+        }
+
+        .mini-preview svg {
+            width: 96px;
+            height: 64px;
+            border-radius: 12px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        .mini-preview .mini-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .mini-preview strong {
+            display: block;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        @keyframes floaty {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .mini-preview { animation: none; }
         }
     </style>
 </head>
@@ -427,13 +566,52 @@
 
                 <div class="actions">
                     <a href="preview.html" class="btn-primary">
-                        <span class="icon-orbit">▶</span>
-                        <span>Open Preview</span>
+                        <span class="icon-orbit" aria-hidden="true">▶</span>
+                        <span class="btn-text">
+                            <span class="btn-title">Open Preview</span>
+                            <span class="btn-sub">Launch the live editor</span>
+                        </span>
                     </a>
 
                     <div class="btn-ghost">
                         <span class="btn-ghost-dot"></span>
                         <span>Rich UI · Welcome to Galaxy Code</span>
+                    </div>
+                </div>
+
+                <div class="mini-preview" aria-hidden="true">
+                    <svg viewBox="0 0 160 110" role="img" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="mini-gradient" x1="0" x2="1" y1="0" y2="1">
+                                <stop offset="0%" stop-color="#4cc9f0" stop-opacity="0.9" />
+                                <stop offset="100%" stop-color="#ffbe0b" stop-opacity="0.9" />
+                            </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="160" height="110" rx="14" fill="#0b1020"/>
+                        <rect x="10" y="14" width="60" height="6" rx="3" fill="url(#mini-gradient)" />
+                        <rect x="10" y="28" width="88" height="6" rx="3" fill="rgba(255,255,255,0.28)" />
+                        <rect x="10" y="42" width="72" height="6" rx="3" fill="rgba(255,255,255,0.2)" />
+                        <rect x="10" y="68" width="96" height="24" rx="10" fill="rgba(76,201,240,0.25)" />
+                        <rect x="112" y="68" width="38" height="24" rx="10" fill="url(#mini-gradient)" />
+                    </svg>
+                    <div class="mini-text">
+                        <strong>Live preview, instantly</strong>
+                        See changes render as you type, then export the final HTML.
+                    </div>
+                </div>
+
+                <div class="feature-list" role="list">
+                    <div class="feature-item" role="listitem">
+                        <span class="feature-icon" aria-hidden="true"></span>
+                        Edit with comfort and focus
+                    </div>
+                    <div class="feature-item" role="listitem">
+                        <span class="feature-icon" aria-hidden="true"></span>
+                        Preview changes in real time
+                    </div>
+                    <div class="feature-item" role="listitem">
+                        <span class="feature-icon" aria-hidden="true"></span>
+                        Download a clean HTML file
                     </div>
                 </div>
             </section>
@@ -474,14 +652,14 @@
     </div>
     <!-- Settings launcher (top-right) -->
     <div class="settings-launcher" style="position:fixed;top:18px;right:18px;z-index:1200;">
-        <button id="settings-btn" title="Settings" style="width:40px;height:40px;border-radius:999px;border:none;background:rgba(255,255,255,0.04);color:var(--text-main);cursor:pointer;">⚙</button>
+        <button id="settings-btn" title="Settings" aria-label="Settings" aria-controls="settings-modal" aria-expanded="false" data-tooltip="Settings" class="pulse" style="width:40px;height:40px;border-radius:999px;border:none;background:rgba(255,255,255,0.04);color:var(--text-main);cursor:pointer;">⚙</button>
     </div>
 
     <!-- Settings modal -->
-    <div id="settings-modal" aria-hidden="true" style="position:fixed;inset:0;z-index:1190;">
+    <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" aria-hidden="true" style="position:fixed;inset:0;z-index:1190;">
         <div class="settings-card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <strong style="letter-spacing:0.06em;text-transform:uppercase;font-size:0.78rem;color:var(--text-muted);">Settings</strong>
+                <strong id="settings-title" style="letter-spacing:0.06em;text-transform:uppercase;font-size:0.78rem;color:var(--text-muted);">Settings</strong>
                 <button id="settings-close" style="background:transparent;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;">✕</button>
             </div>
 
@@ -503,6 +681,8 @@
                             <a id="idx-gh-link" href="https://github.com/tapman104" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.88rem;display:inline-block;margin-bottom:6px;">View on GitHub</a>
                             <br>
                             <a id="idx-gh-repo" href="https://github.com/tapman104/ICE-STONE-CODE-PREVIEW" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.82rem;">ICE-STONE-CODE-PREVIEW</a>
+                            <br>
+                            <a id="idx-buymeacoffee" href="https://buymeacoffee.com/tapman" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none;font-size:0.82rem;display:inline-block;margin-top:6px;">Buy Me a Coffee</a>
                             <div id="idx-gh-bio" style="font-size:0.82rem;color:var(--text-muted);margin-top:6px;max-width:200px;">GitHub profile</div>
                             <div style="margin-top:8px;font-size:0.86rem;color:var(--text-muted)">⭐ <strong id="idx-gh-stars">—</strong> &nbsp; 🍴 <strong id="idx-gh-forks">—</strong> &nbsp; 🏷 <strong id="idx-gh-release">—</strong></div>
                         </div>
@@ -520,24 +700,67 @@
             const themeDark = document.getElementById('idx-theme-dark');
             const themeLight = document.getElementById('idx-theme-light');
 
+            function trapFocus(modal){
+                const focusable = Array.from(
+                    modal.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])')
+                ).filter(el => el.offsetParent !== null);
+                if(focusable.length === 0) return () => {};
+                let i = 0;
+                const keyHandler = (e) => {
+                    if(e.key === 'Tab'){
+                        e.preventDefault();
+                        i = (i + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length;
+                        focusable[i].focus();
+                    }
+                    if(e.key === 'Escape') { closeSettings(); }
+                };
+                document.addEventListener('keydown', keyHandler);
+                focusable[0].focus();
+                return () => document.removeEventListener('keydown', keyHandler);
+            }
+
+            let releaseTrap = null;
             function openSettings(){
                 settingsModal.classList.add('open');
                 settingsModal.style.pointerEvents = 'auto';
                 settingsModal.setAttribute('aria-hidden','false');
-                // focus first control inside modal
-                const first = settingsModal.querySelector('input, button, a');
-                if(first) first.focus();
+                settingsBtn.setAttribute('aria-expanded', 'true');
+                ensureIdxGithub();
+                if(settingsBtn) settingsBtn.classList.remove('pulse');
+                if(releaseTrap) releaseTrap();
+                releaseTrap = trapFocus(settingsModal);
             }
             function closeSettings(){
+                const wasOpen = settingsModal.classList.contains('open');
                 settingsModal.classList.remove('open');
                 settingsModal.style.pointerEvents = 'none';
                 settingsModal.setAttribute('aria-hidden','true');
+                settingsBtn.setAttribute('aria-expanded', 'false');
+                if(releaseTrap){
+                    releaseTrap();
+                    releaseTrap = null;
+                }
+                if(wasOpen && settingsBtn) settingsBtn.focus();
             }
 
             settingsBtn.addEventListener('click', (e)=>{ e.stopPropagation(); if(settingsModal.classList.contains('open')) closeSettings(); else openSettings(); });
             settingsClose.addEventListener('click', closeSettings);
             settingsModal.addEventListener('click', (e)=>{ if(e.target === settingsModal) closeSettings(); });
-            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeSettings(); });
+            document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && settingsModal.classList.contains('open')) closeSettings(); });
+
+            // Subtle first-load pulse for discoverability
+            if (settingsBtn) {
+                try {
+                    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    if (reduceMotion) {
+                        settingsBtn.classList.remove('pulse');
+                    } else {
+                        setTimeout(() => settingsBtn.classList.remove('pulse'), 4200);
+                    }
+                } catch (e) {
+                    settingsBtn.classList.remove('pulse');
+                }
+            }
 
             // Theme handling
             function applyTheme(t){
@@ -602,9 +825,6 @@
                 fetchIdxGithub().then(populateIdxGithub).catch(()=>{});
             }
 
-            // Ensure GitHub loads when opening modal
-            const origOpen = openSettings;
-            openSettings = function(){ origOpen(); ensureIdxGithub(); };
         })();
     </script>
 
